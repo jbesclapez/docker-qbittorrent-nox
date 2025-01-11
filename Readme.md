@@ -1,4 +1,4 @@
-# qBittorrent-nox Docker Image [![GitHub Actions CI Status](https://github.com/qbittorrent/docker-qbittorrent-nox/actions/workflows/release.yaml/badge.svg)](https://github.com/qbittorrent/docker-qbittorrent-nox/actions)
+# GhostTracker for qBittorrent-nox Docker Image [![GitHub Actions CI Status](https://github.com/qbittorrent/docker-qbittorrent-nox/actions/workflows/release.yaml/badge.svg)](https://github.com/qbittorrent/docker-qbittorrent-nox/actions)
 
 Repository on Docker Hub: https://hub.docker.com/r/qbittorrentofficial/qbittorrent-nox \
 Repository on GitHub: https://github.com/qbittorrent/docker-qbittorrent-nox
