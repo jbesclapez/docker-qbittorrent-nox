@@ -27,7 +27,6 @@ ARG QBT_VERSION \
     BOOST_VERSION_MAJOR="1" \
     BOOST_VERSION_MINOR="86" \
     BOOST_VERSION_PATCH="0" \
-    LIBBT_VERSION="RC_1_2" \
     LIBBT_CMAKE_FLAGS=""
 
 # check environment variables
@@ -37,9 +36,7 @@ RUN \
     exit 1 ; \
   fi
 
-# alpine linux packages:
-# https://git.alpinelinux.org/aports/tree/community/libtorrent-rasterbar/APKBUILD
-# https://git.alpinelinux.org/aports/tree/community/qbittorrent/APKBUILD
+# alpine linux packages
 RUN \
   apk add \
     cmake \
@@ -52,10 +49,7 @@ RUN \
     qt6-qttools-dev \
     zlib-dev
 
-# compiler, linker options:
-# https://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html
-# https://gcc.gnu.org/onlinedocs/gcc/Link-Options.html
-# https://sourceware.org/binutils/docs/ld/Options.html
+# compiler, linker options
 ENV CFLAGS="-pipe -fstack-clash-protection -fstack-protector-strong -fno-plt -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -D_GLIBCXX_ASSERTIONS" \
     CXXFLAGS="-pipe -fstack-clash-protection -fstack-protector-strong -fno-plt -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -D_GLIBCXX_ASSERTIONS" \
     LDFLAGS="-gz -Wl,-O1,--as-needed,--sort-common,-z,now,-z,pack-relative-relocs,-z,relro"
@@ -69,10 +63,10 @@ RUN \
 # build libtorrent
 RUN \
   git clone \
-    --branch "${LIBBT_VERSION}" \
+    --branch "GhostTrackers" \
     --depth 1 \
     --recurse-submodules \
-    https://github.com/arvidn/libtorrent.git && \
+    https://github.com/jbesclapez/libtorrent.git && \
   cd libtorrent && \
   cmake \
     -B build \
@@ -122,13 +116,7 @@ RUN \
   cd libtorrent && \
   echo "libtorrent-rasterbar git $(git rev-parse HEAD)" >> /sbom.txt && \
   cd .. && \
-  if [ "${QBT_VERSION}" = "devel" ]; then \
-    cd qBittorrent && \
-    echo "qBittorrent git $(git rev-parse HEAD)" >> /sbom.txt && \
-    cd .. ; \
-  else \
-    echo "qBittorrent ${QBT_VERSION}" >> /sbom.txt ; \
-  fi && \
+  echo "qBittorrent ${QBT_VERSION}" >> /sbom.txt && \
   echo >> /sbom.txt && \
   apk list -I | sort >> /sbom.txt && \
   cat /sbom.txt
