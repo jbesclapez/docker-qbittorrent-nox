@@ -16,6 +16,7 @@ The custom libtorrent disables tracker reporting of uploads, downloads, and comp
 In other words, it means that your ratio is not moving while you can still download.
 
 When installed you should see that :
+
 .. image:: img/GhostTracker.png
    :alt: GhostTracker Working Screenshot
 
@@ -34,15 +35,16 @@ Usage
 
 1. **Download the Repository**
 
-   Clone this repository or download it as a `.zip`:
+   Clone this repository or download it as a `.zip` on your computer - you will need to transfer those files later to the NAS but it is easier to change the files on your computer than on the NAS directly!:
    https://github.com/qbittorrent/docker-qbittorrent-nox/archive/refs/heads/main.zip
+   
 
-2. **Edit the `.env` File**
+2. **Edit the `.env` File on you computer**
 
    Open the `.env` file in the repository and configure the following variables:
 
    - ``QBT_LEGAL_NOTICE``: Confirm the legal notice (`confirm` to accept).
-   - ``QBT_VERSION``: Specify the qBittorrent version (e.g., `5.0.3`).
+   - ``QBT_VERSION``: Specify the qBittorrent version (e.g., `5.0.3`) - I never teste on v4.*.
    - ``QBT_WEBUI_PORT``: WebUI port (e.g., `8085`).
    - ``QBT_CONFIG_PATH``: Full path for storing qBittorrent configurations.
    - ``QBT_DOWNLOADS_PATH``: Full path for torrent downloads.
@@ -60,29 +62,18 @@ Usage
 
 3. **Run the Image**
 
-   - Using Docker Compose:
-     .. code-block:: shell
 
-        docker compose up -d
+   Copy the files to the root folder you are going to use on your NAS.
+   It should look like this :
+   / (root of the repo)
+   ├── Dockerfile
+   ├── docker-compose.yml
+   ├── entrypoint.sh
+   ├── .env
+   ├── config/ (optional)
+   ├── downloads/ (optional)
 
-   - Using Docker CLI:
-     .. code-block:: shell
-
-        docker run \
-          -t \
-          --name qbittorrent-nox \
-          --rm \
-          --stop-timeout 1800 \
-          -e QBT_LEGAL_NOTICE=confirm \
-          -e QBT_VERSION=5.0.3 \
-          -e QBT_WEBUI_PORT=8085 \
-          -e TZ=Europe/Paris \
-          -v /path/to/config:/config \
-          -v /path/to/downloads:/downloads \
-          -p 6881:6881/tcp \
-          -p 6881:6881/udp \
-          -p 8085:8085/tcp \
-          qbittorrentofficial/qbittorrent-nox:5.0.3
+   Open Container Manager and run it. It will take some time (15 min) as it needs to compile libtorrent and qbitorrent.
 
 4. **Access the WebUI**
 
