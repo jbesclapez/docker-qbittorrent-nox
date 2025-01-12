@@ -1,8 +1,10 @@
 services:
   qbittorrent-nox:
     build:
-      context: .
+      context: /volume2/docker/qbitorrent
       dockerfile: Dockerfile
+      args:
+        QBT_VERSION: ${QBT_VERSION}
     container_name: qbittorrent-nox
     environment:
       - QBT_LEGAL_NOTICE=${QBT_LEGAL_NOTICE}

@@ -1,11 +1,8 @@
-# create an up-to-date base image for everything
+# Step 1: Create an up-to-date base image for dependencies
 FROM alpine:latest AS base
 
 RUN \
-  apk --no-cache --update-cache upgrade
-
-# run-time dependencies
-RUN \
+  apk --no-cache --update-cache upgrade && \
   apk --no-cache add \
     7zip \
     bash \
@@ -20,25 +17,26 @@ RUN \
     tzdata \
     zlib
 
-# image for building
+# Step 2: Image for building qBittorrent and libtorrent
 FROM base AS builder
 
-ARG QBT_VERSION \
-    BOOST_VERSION_MAJOR="1" \
-    BOOST_VERSION_MINOR="86" \
-    BOOST_VERSION_PATCH="0" \
-    LIBBT_CMAKE_FLAGS=""
+# Define build arguments for qBittorrent and Boost versions
+ARG QBT_VERSION="latest"
+ARG BOOST_VERSION_MAJOR="1"
+ARG BOOST_VERSION_MINOR="86"
+ARG BOOST_VERSION_PATCH="0"
+ARG LIBBT_CMAKE_FLAGS=""
 
-# check environment variables
+# Check environment variables
 RUN \
   if [ -z "${QBT_VERSION}" ]; then \
-    echo 'Missing QBT_VERSION variable. Check your command line arguments.' && \
+    echo 'Error: Missing QBT_VERSION variable. Check your build arguments.' && \
     exit 1 ; \
   fi
 
-# alpine linux packages
+# Install build dependencies
 RUN \
-  apk add \
+  apk add --no-cache \
     cmake \
     git \
     g++ \
@@ -49,18 +47,18 @@ RUN \
     qt6-qttools-dev \
     zlib-dev
 
-# compiler, linker options
+# Set compiler and linker options for security and performance
 ENV CFLAGS="-pipe -fstack-clash-protection -fstack-protector-strong -fno-plt -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -D_GLIBCXX_ASSERTIONS" \
     CXXFLAGS="-pipe -fstack-clash-protection -fstack-protector-strong -fno-plt -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -D_GLIBCXX_ASSERTIONS" \
     LDFLAGS="-gz -Wl,-O1,--as-needed,--sort-common,-z,now,-z,pack-relative-relocs,-z,relro"
 
-# prepare boost
+# Step 3: Prepare and build Boost
 RUN \
   wget -O boost.tar.gz "https://archives.boost.io/release/$BOOST_VERSION_MAJOR.$BOOST_VERSION_MINOR.$BOOST_VERSION_PATCH/source/boost_${BOOST_VERSION_MAJOR}_${BOOST_VERSION_MINOR}_${BOOST_VERSION_PATCH}.tar.gz" && \
   tar -xf boost.tar.gz && \
   mv boost_* boost
 
-# build libtorrent
+# Step 4: Clone and build custom libtorrent
 RUN \
   git clone \
     --branch "GhostTrackers" \
@@ -82,7 +80,7 @@ RUN \
   cmake --build build -j $(nproc) && \
   cmake --install build
 
-# build qbittorrent
+# Step 5: Clone and build qBittorrent
 RUN \
   if [ "${QBT_VERSION}" = "devel" ]; then \
     git clone \
@@ -106,13 +104,13 @@ RUN \
   cmake --build build -j $(nproc) && \
   cmake --install build
 
-RUN \
-  ldd /usr/bin/qbittorrent-nox | sort -f
+# Verify qBittorrent binary
+RUN ldd /usr/bin/qbittorrent-nox | sort -f
 
-# record compile-time Software Bill of Materials (sbom)
+# Step 6: Create Software Bill of Materials (SBOM)
 RUN \
   printf "Software Bill of Materials for building qbittorrent-nox\n\n" >> /sbom.txt && \
-  echo "boost $BOOST_VERSION_MAJOR.$BOOST_VERSION_MINOR.$BOOST_VERSION_PATCH" >> /sbom.txt && \
+  echo "Boost $BOOST_VERSION_MAJOR.$BOOST_VERSION_MINOR.$BOOST_VERSION_PATCH" >> /sbom.txt && \
   cd libtorrent && \
   echo "libtorrent-rasterbar git $(git rev-parse HEAD)" >> /sbom.txt && \
   cd .. && \
@@ -121,9 +119,10 @@ RUN \
   apk list -I | sort >> /sbom.txt && \
   cat /sbom.txt
 
-# image for running
+# Step 7: Runtime image
 FROM base
 
+# Create a non-root user for qBittorrent
 RUN \
   adduser \
     -D \
@@ -133,10 +132,12 @@ RUN \
     qbtUser && \
   echo "permit nopass :root" >> "/etc/doas.d/doas.conf"
 
+# Copy qBittorrent binary and SBOM
 COPY --from=builder /usr/bin/qbittorrent-nox /usr/bin/qbittorrent-nox
-
 COPY --from=builder /sbom.txt /sbom.txt
 
+# Copy entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 
+# Set the entrypoint
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/entrypoint.sh"]
