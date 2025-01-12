@@ -1,9 +1,6 @@
 .. image:: img/GhostTracker_logo.png
    :alt: GhostTracker Logo
 
-.. image:: img/GhostTracker.png
-   :alt: GhostTracker Working Screenshot
-
 =====================================
 GhostTracker for qBittorrent-nox Docker Image
 =====================================
@@ -14,27 +11,18 @@ GhostTracker for qBittorrent-nox Docker Image
 Repository on Docker Hub: https://hub.docker.com/r/qbittorrentofficial/qbittorrent-nox  
 Repository on GitHub: https://github.com/qbittorrent/docker-qbittorrent-nox
 
-This project builds a Docker image for `qBittorrent-nox` based on a custom version of libtorrent called `GhostTracker`. The custom libtorrent disables tracker reporting of uploads, downloads, and completion events while retaining full functionality for downloading torrents.
+This project builds a Docker image for `qBittorrent-nox` based on a custom version of libtorrent called `GhostTracker`. 
+The custom libtorrent disables tracker reporting of uploads, downloads, and completion events while retaining full functionality for downloading torrents.
+In other words, it means that your ratio is not moving while you can still download.
+
+When installed you should see that :
+.. image:: img/GhostTracker.png
+   :alt: GhostTracker Working Screenshot
 
 .. note::
    For more detailed information about qBittorrent's Docker images, visit the original repository:
    https://github.com/qbittorrent/docker-qbittorrent-nox
 
-Supported Architectures
------------------------
-* linux/386
-* linux/amd64
-* linux/arm/v6
-* linux/arm/v7
-* linux/arm64/v8
-* linux/riscv64
-
-Reporting Bugs
---------------
-* If the problem is related to Docker, report it to:
-  https://github.com/qbittorrent/docker-qbittorrent-nox/issues
-* If the problem is with qBittorrent itself, report it to:
-  https://github.com/qbittorrent/qBittorrent/issues
 
 Usage
 -----
@@ -111,17 +99,8 @@ Usage
    - Change the password after logging in:
      Navigate to `Tools > Options... > Web UI > Authentication`.
 
-5. **Stop the Container**
-
-   - Using Docker Compose:
-     .. code-block:: shell
-
-        docker compose down
-
-   - Using Docker CLI:
-     .. code-block:: shell
-
-        docker stop qbittorrent-nox
+.. image:: img/ContainerManager.png
+   :alt: ContainerManger
 
 Manual Build
 ------------
