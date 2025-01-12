@@ -1,7 +1,7 @@
-.. image:: docs/img/GhostTracker_logo.png
+.. image:: img/GhostTracker_logo.png
    :alt: GhostTracker Logo
 
-.. image:: docs/img/GhostTracker.png
+.. image:: img/GhostTracker.png
    :alt: GhostTracker Working Screenshot
 
 =====================================
