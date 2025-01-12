@@ -1,6 +1,6 @@
-.. img/GhostTracker_logo.png
+.. ::img/GhostTracker_logo.png
 
-.. img/GhostTracker.png
+.. ::img/GhostTracker.png
 
 # GhostTracker for qBittorrent-nox Docker Image [![GitHub Actions CI Status](https://github.com/qbittorrent/docker-qbittorrent-nox/actions/workflows/release.yaml/badge.svg)](https://github.com/qbittorrent/docker-qbittorrent-nox/actions)
 
