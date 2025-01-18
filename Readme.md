@@ -12,6 +12,10 @@ You are now reading the main branch, but you should select the other branch on t
 
 
 
+
+
+
+
 Repository on Docker Hub: https://hub.docker.com/r/qbittorrentofficial/qbittorrent-nox \
 Repository on GitHub: https://github.com/qbittorrent/docker-qbittorrent-nox
 
