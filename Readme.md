@@ -1,4 +1,5 @@
-# GhostTracker for qBittorrent-nox Docker Image [![GitHub Actions CI Status](https://github.com/qbittorrent/docker-qbittorrent-nox/actions/workflows/release.yaml/badge.svg)](https://github.com/qbittorrent/docker-qbittorrent-nox/actions)
+# docker-qbittorrent-nox
+ Docker Image [![GitHub Actions CI Status](https://github.com/qbittorrent/docker-qbittorrent-nox/actions/workflows/release.yaml/badge.svg)](https://github.com/qbittorrent/docker-qbittorrent-nox/actions)
 
 CHANGE BRANCH! 
 
@@ -6,7 +7,7 @@ CHANGE BRANCH!
 
 CHANGE BRANCH! 
 
-You are now reading the main branch, but you should select the other branch on the top left.
+You are now reading the main branch, but you should select the other branch on the top left: GhostTrackers-qbitorrent-nox
 
 CHANGE BRANCH! 
 
