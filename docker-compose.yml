@@ -1,23 +1,44 @@
 services:
-  qbittorrent-nox:
+  qbittorrent-nox-ghostrackers:
     build:
-      context: /volume2/docker/qbitorrent
+      context: .
       dockerfile: Dockerfile
       args:
-        QBT_VERSION: ${QBT_VERSION}
-    container_name: qbittorrent-nox
+        QBT_VERSION: ${QBT_VERSION:-5.1.2}
+        QBT_TAG: release-${QBT_VERSION:-5.1.2}
+        LIBTORRENT_ARTIFACT_URL: ${LIBTORRENT_ARTIFACT_URL:-}
+        GHOSTRACKERS_VERSION: ${QBT_VERSION:-5.1.2}
+    # Alternative: use pre-built image from GitHub Container Registry
+    # image: ghcr.io/yourusername/docker-qbittorrent-nox-ghostracker:${QBT_VERSION:-5.1.2}-ghostrackers
+    container_name: ${CONTAINER_NAME:-qbittorrent-nox-ghostrackers}
     environment:
-      - QBT_LEGAL_NOTICE=${QBT_LEGAL_NOTICE}
-      - QBT_VERSION=${QBT_VERSION}
-      - QBT_WEBUI_PORT=${QBT_WEBUI_PORT}
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
+      - QBT_LEGAL_NOTICE=${QBT_LEGAL_NOTICE:-confirm}
+      - QBT_VERSION=${QBT_VERSION:-5.1.2}
+      - QBT_WEBUI_PORT=${QBT_WEBUI_PORT:-8085}
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - PAGID=${PAGID:-}
+      - TZ=${TZ:-UTC}
+      - UMASK=${UMASK:-022}
     ports:
-      - "6881:6881/tcp"
-      - "6881:6881/udp"
-      - "${QBT_WEBUI_PORT}:${QBT_WEBUI_PORT}/tcp"
+      - "${QBT_BT_PORT:-6881}:${QBT_BT_PORT:-6881}/tcp"
+      - "${QBT_BT_PORT:-6881}:${QBT_BT_PORT:-6881}/udp"
+      - "${QBT_WEBUI_PORT:-8085}:${QBT_WEBUI_PORT:-8085}/tcp"
     volumes:
-      - ${QBT_CONFIG_PATH}:/config
-      - ${QBT_DOWNLOADS_PATH}:/downloads
-    restart: unless-stopped
+      - ${QBT_CONFIG_PATH:-./config}:/config
+      - ${QBT_DOWNLOADS_PATH:-./downloads}:/downloads
+    restart: ${RESTART_POLICY:-unless-stopped}
+    # Optional: Memory and CPU limits
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: ${MEMORY_LIMIT:-2g}
+    #       cpus: ${CPU_LIMIT:-2.0}
+    # Optional: Custom network
+    # networks:
+    #   - qbittorrent-network
+
+# Optional: Custom network configuration
+# networks:
+#   qbittorrent-network:
+#     driver: bridge

@@ -1,0 +1,150 @@
+name: Build and Push qBittorrent-nox GhostTrackers
+
+on:
+  workflow_dispatch:
+    inputs:
+      qbt_version:
+        description: 'qBittorrent version tag (e.g., release-5.1.2)'
+        required: true
+        default: 'release-5.1.2'
+        type: string
+      libtorrent_artifact_url:
+        description: 'URL to the libtorrent artifact (GitHub Actions artifact)'
+        required: true
+        default: 'https://github.com/jbesclapez/libtorrent/actions/runs/16276276484/artifacts/3529935533'
+        type: string
+      image_tag:
+        description: 'Docker image tag (e.g., 5.1.2-ghostrackers)'
+        required: false
+        type: string
+      latest_tag:
+        description: 'Also tag as latest'
+        required: false
+        default: false
+        type: boolean
+  
+  push:
+    branches:
+      - main
+      - GhostTracker-qbitorrent-nox
+    paths:
+      - 'Dockerfile'
+      - '.github/workflows/build-and-publish.yml'
+      - 'entrypoint.sh'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract version from qBittorrent tag
+      id: version
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          QBT_TAG="${{ github.event.inputs.qbt_version }}"
+          ARTIFACT_URL="${{ github.event.inputs.libtorrent_artifact_url }}"
+          CUSTOM_TAG="${{ github.event.inputs.image_tag }}"
+          LATEST="${{ github.event.inputs.latest_tag }}"
+        else
+          # Default values for push events
+          QBT_TAG="release-5.1.2"
+          ARTIFACT_URL="https://github.com/jbesclapez/libtorrent/actions/runs/16276276484/artifacts/3529935533"
+          CUSTOM_TAG=""
+          LATEST="false"
+        fi
+        
+        # Extract version number from release tag (e.g., release-5.1.2 -> 5.1.2)
+        if [[ "$QBT_TAG" =~ release-(.+) ]]; then
+          VERSION="${BASH_REMATCH[1]}"
+        else
+          VERSION="$QBT_TAG"
+        fi
+        
+        # Set image tag
+        if [[ -n "$CUSTOM_TAG" ]]; then
+          IMAGE_TAG="$CUSTOM_TAG"
+        else
+          IMAGE_TAG="${VERSION}-ghostrackers"
+        fi
+        
+        echo "qbt_tag=$QBT_TAG" >> $GITHUB_OUTPUT
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "artifact_url=$ARTIFACT_URL" >> $GITHUB_OUTPUT
+        echo "latest=$LATEST" >> $GITHUB_OUTPUT
+        
+        echo "Building qBittorrent $VERSION with GhostTrackers libtorrent"
+        echo "Image will be tagged as: $IMAGE_TAG"
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=raw,value=${{ steps.version.outputs.image_tag }}
+          type=raw,value=latest,enable=${{ steps.version.outputs.latest == 'true' }}
+        labels: |
+          org.opencontainers.image.title=qBittorrent-nox GhostTrackers
+          org.opencontainers.image.description=qBittorrent-nox with GhostTrackers libtorrent - stealth torrent client
+          org.opencontainers.image.version=${{ steps.version.outputs.version }}
+          org.opencontainers.image.vendor=GhostTrackers
+          qbittorrent.version=${{ steps.version.outputs.version }}
+          libtorrent.variant=ghostrackers
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          QBT_VERSION=${{ steps.version.outputs.version }}
+          QBT_TAG=${{ steps.version.outputs.qbt_tag }}
+          LIBTORRENT_ARTIFACT_URL=${{ steps.version.outputs.artifact_url }}
+          GHOSTRACKERS_VERSION=${{ steps.version.outputs.version }}
+        platforms: linux/amd64,linux/arm64
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Create release summary
+      run: |
+        echo "## 🚀 Docker Image Built Successfully!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📦 Image Details" >> $GITHUB_STEP_SUMMARY
+        echo "- **qBittorrent Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **libtorrent Variant:** GhostTrackers" >> $GITHUB_STEP_SUMMARY
+        echo "- **Docker Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🐳 Usage" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+        echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### ✨ Features" >> $GITHUB_STEP_SUMMARY
+        echo "- qBittorrent-nox ${{ steps.version.outputs.version }} with GhostTrackers modifications" >> $GITHUB_STEP_SUMMARY
+        echo "- Stealth mode: No tracker reporting of uploads/downloads" >> $GITHUB_STEP_SUMMARY
+        echo "- Full download functionality retained" >> $GITHUB_STEP_SUMMARY
+        echo "- Multi-architecture support (amd64, arm64)" >> $GITHUB_STEP_SUMMARY 
