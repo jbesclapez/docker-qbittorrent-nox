@@ -47,6 +47,8 @@ RUN \
     openssl-dev \
     qt6-qtbase-dev \
     qt6-qttools-dev \
+    qt6-qtbase-private-dev \
+    pkgconfig \
     zlib-dev \
     sed \
     unzip \
@@ -67,6 +69,18 @@ RUN \
 # Copy the artifact download script
 COPY scripts/download-libtorrent-artifacts.sh /tmp/download-libtorrent-artifacts.sh
 RUN chmod +x /tmp/download-libtorrent-artifacts.sh
+
+# Step 3.5: Fix Qt6 private headers path issue
+RUN \
+  # Create missing Qt6 directories and fix paths
+  QT6_VERSION=$(pkg-config --modversion Qt6Core 2>/dev/null || echo "6.8.3") && \
+  echo "Qt6 version detected: $QT6_VERSION" && \
+  mkdir -p "/usr/include/qt6/QtCore/${QT6_VERSION}" && \
+  if [ -d "/usr/include/qt6/QtCore" ] && [ ! -d "/usr/include/qt6/QtCore/${QT6_VERSION}/QtCore" ]; then \
+    cp -r /usr/include/qt6/QtCore/* "/usr/include/qt6/QtCore/${QT6_VERSION}/" 2>/dev/null || true ; \
+  fi && \
+  # Create symlinks for Qt6 compatibility
+  ln -sf /usr/include/qt6/QtCore "/usr/include/qt6/QtCore/${QT6_VERSION}/QtCore" 2>/dev/null || true
 
 # Step 4: Download and install pre-built GhostTrackers libtorrent
 RUN \
@@ -173,7 +187,10 @@ RUN \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
     -DBOOST_ROOT=/boost \
-    -DGUI=OFF && \
+    -DGUI=OFF \
+    -DCMAKE_PREFIX_PATH=/usr/lib/qt6 \
+    -DQT_FEATURE_private_tests=OFF \
+    -Wno-dev && \
   cmake --build build -j $(nproc) && \
   cmake --install build
 
